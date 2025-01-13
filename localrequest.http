@@ -1,0 +1,12 @@
+GET http://localhost:8081/
+
+###
+POST http://localhost:8081/add
+###
+GET http://localhost:8081/news
+
+###
+PUT http://localhost:8081/edit
+
+###
+DELETE http://localhost:8081/delete HTTP/1.1 HTTP/1.1
