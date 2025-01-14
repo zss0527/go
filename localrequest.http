@@ -49,3 +49,36 @@ Content-Type: application/json
 
 ###dynamic route
 GET http://localhost:8081/user/55
+
+
+###
+POST http://localhost:8081/admin/user
+Content-Type: application/json
+
+{
+    "username":"dddddd",
+    "email":"fsd@qq.com",
+    "age":19,
+    "addTime":98
+}
+
+
+###
+PUT http://localhost:8081/admin/user
+
+
+###
+DELETE http://localhost:8081/admin/user/8
+
+
+###
+POST http://localhost:8082/users/add
+Content-Type: application/json
+
+{
+    "username":"dddddd",
+    "email":"fsd@qq.com",
+    "age":19,
+    "addTime":98,
+    "password":"123456"
+}

@@ -1,0 +1,4 @@
+server:
+  address: :8081
+database:
+  dsn: test.db
