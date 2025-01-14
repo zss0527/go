@@ -10,3 +10,42 @@ PUT http://localhost:8081/edit
 
 ###
 DELETE http://localhost:8081/delete HTTP/1.1 HTTP/1.1
+
+
+###
+GET http://localhost:8081/json
+
+###
+GET http://localhost:8081/json3
+
+###
+GET http://localhost:8081/jsonp?callback=xxx
+
+###
+GET http://localhost:8081/xml
+
+###
+GET http://localhost:8081/newsPage
+
+###
+GET http://localhost:8081/getParams1?username=larry&age=28
+
+### post request with form data 
+POST http://localhost:8081/user HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+username=zss0527&password=var
+
+
+### post request with body json data
+POST http://localhost:8081/userJson
+Content-Type: application/json
+
+{
+    "username":"dddddd",
+    "address":"china"
+}
+
+
+###dynamic route
+GET http://localhost:8081/user/55
