@@ -1,16 +1,33 @@
 package main
 
-import "fmt"
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+)
 
 /*
 go中的复合数据类型是由基本数据类型以各种方式组合而构成的，主要包括数组、slice、map和struct
 其中数组和结构体是聚合类型，它们的值由内存中的一组变量构成，数组的元素具有相同的类型，结构体的元素数据类型可以不同；
 数组和结构体长度固定，slice和map是动态数据结构，长度可以动态增长；
 */
+type Employee struct {
+	ID                int
+	Name              string
+	Adress, Position  string
+	Salary, ManagerID int
+}
+
+type Point struct{ x, y int }
 
 func main() {
 	// arrayFn()
-	sliceFn()
+	// sliceFn()
+	// mapFn()
+	// structFn()
+	JsonFn()
 
 }
 
@@ -181,6 +198,193 @@ func sliceFn() {
 
 func mapFn() {
 	//go中map的key的类型必须是可以通过==进行比较的，所以slice和浮点型不适合作为map的key，map的value类型没有限制
+	//可以通过make创建一个map并分配内存
+	ages1 := make(map[string]int)
+	//也可以通过map字面量创建一个带初始化键值的map
+	ages2 := map[string]int{
+		"alice":   31,
+		"charlie": 34,
+	}
+	//通过下标访问map元素
+	ages1["larry"] = 29
+	/*
+		但是向一个零值map（未分配内存）中设置元素会导致宕机
+	*/
+	var ages3 map[string]int
+	// ages3["pitiao"] = 23
+
+	//可以通过内置的delete从map中删除元素
+	delete(ages3, "alice")
+	//delete操作总是安全的，即使所要删除的键并不存在
+
+	//map元素的增长可能导致已有元素再散列，map里的元素不是变量，所以无法获取map元素的地址
+	// _ = &ages2["charlie"]
+
+	//对map操作并根据该操作的成功与否做判断的常用结构
+	if age, ok := ages2["bob"]; !ok {
+		fmt.Println(age)
+	}
+
+	//go没有提供Set类型,在go中常用map的key模拟Set
+	dup()
+}
+
+func structFn() {
+	/*
+		结构体是将零个或者多个任意类型的命名变量组合在一起的聚合数据类型，每个变量叫做结构体的成员
+	*/
+
+	//定义结构体
+	/*
+		type Employee struct {
+			ID                int
+			Name              string
+			Adress, Position  string
+			Salary, ManagerID int
+		}
+	*/
+	//结构体成员变量通常一行写一个，变量名在前类型在后，多行之间不用","，相同类型的连续成员变量可以写在一行
+	//成员变量的顺序是结构体类型的一部份，就像容量和长度是某个slice类型的一部份一样
+	//首字母大写的结构体成员变量是可以导出的，一个结构体中可以同时包含可导出和不可导出成员变量
+
+	//声明某种结构体变量
+	//方式1: 直接声明一个零值的值类型结构体变量
+	var dilbert Employee //此时该结构体变量已分配内存，变量是零值，内部成员变量也是对应类型零值
+	//方式2: 通过new声明一个零值的指针类型结构体变量
+	_ = new(Employee) //用new函数可以声明指针类型的结构体变量
+	//方式3: 通过结构体字面量声明并初始化一个值类型的结构体变量
+	_ = Point{1, 2}
+	//方式4: 通过取结构体字面量地址的方式声明并初始化一个指针类型的结构体变量
+	_ = &Point{3, 4}
+
+	//结构体成员都是变量，可以通过点号访问结构体成员变量，可以获取结构体变量和结构体成员变量地址
+	dilbert.Salary += 500
+	position := &dilbert.Position
+	*position = "Senior " + *position
+	//结构体中，点号既可以用在结构体值变量上也可以用在结构体地址变量上，go内部自动会转变
+	var employeeOfTheMOnth *Employee = &dilbert
+	employeeOfTheMOnth.Position += " (proactive team player)"
+	(*employeeOfTheMOnth).Position += " (proactive team player)" //go内部会将上面的语句自动转为这种
+
+	//对于返回Employee结构体指针的函数可以直接链式调用
+	EmployeeByID(3).Position = "ddddd"
+	//如果返回的是Employee左边的表达式无法识别出是一个变量
+	// EmployeeByID1(3).Position = "ddddd"
+
+	//命名结构体s中不能包含相同结构体类型s的成员变量，但是可以包含相同结构体类型s的指针成员变量
+	type tree struct {
+		value       int
+		left, right *tree
+	}
+
+	//结构体初始化有两种方式1:结构体字面量（要求顺序保持和创建该结构体时的保持一致）， 2:通过指定部份或者全部成员变量的名称和值来初始化；
+	//两种方式不可以同时使用
+	_ = Point{1, 2} //结构体字面量
+	_ = Point{x: 1} //通过指定成员变量初始化，没有被初始化的成员变量值为类型零值
+
+	//结构体值可以直接作为函数参数或返回值，值传递不会影响外面原来的结构体
+	//结构体指针也可以作为函数参数或者返回值，引用传递函数内部的修改会直接影响外面原来的结构体，对于复杂结构体指针传递效率更高
+
+	//如果一个结构体所有成员变量都是可比较的（不含slice），那么这个结构体就是可比较的，比较的方式是按照成员变量顺序挨个比较
+	p := Point{1, 2}
+	q := Point{2, 1}
+	fmt.Println(p == q) //false
+
+	/*
+		结构体嵌套和匿名成员
+	*/
+	type Circle1 struct{ X, Y, Radius int }
+	type Wheel1 struct{ X, Y, Radius, Spokes int }
+	var w1 Wheel1
+	w1.X = 8
+	w1.Y = 9
+	w1.Radius = 5
+	w1.Spokes = 20
+	//结构体嵌套重构
+	type Point struct{ X, Y int }
+	type Circle2 struct {
+		Center2 Point
+		Radius  int
+	}
+	type Wheel2 struct {
+		Circle2 Circle2
+		Spokes  int
+	}
+	var w2 Wheel2
+	w2.Circle2.Center2.X = 8
+	w2.Circle2.Center2.Y = 9
+	w2.Circle2.Radius = 5
+	w2.Spokes = 20
+	//结构体匿名嵌套重构：结构体内部可以定义不带名称的结构体成员，只需要指定类型即可，这种结构体成员称为匿名成员，匿名成员的名称和类型相同
+	//这个你名成员必须是一个命名类型或者指向命名类型的指针
+	type Circle struct {
+		Point
+		Radius int
+	}
+	type Wheel struct {
+		Circle
+		Spokes int
+	}
+	var w Wheel
+	w.X = 8
+	w.Y = 9 //等价于w.Circle.Point.X = 8
+	w.Radius = 8
+	w.Spokes = 20
+	//结构体字面量并没有快捷方式来初始化结构体
+	// w = Wheel{8,9,10,20}//编译错误
+	// w = Wheel{X:8,Y:9,Radius: 5, Spokes: 20}//编译错误
+	w = Wheel{Circle{Point{8, 9}, 5}, 20}
+	w = Wheel{
+		Circle: Circle{
+			Point:  Point{8, 9},
+			Radius: 5,
+		},
+		Spokes: 20, //结尾必须有逗号
+	}
+	//不能在同一个结构体定义两个相同类型的你名成员
+	//外围的结构体类型获取的不仅是你名成员的内部变量，还有相关的方法，Go是通过这种组合实现面向对象编程方式的
+
+}
+
+func JsonFn() {
+	/*
+	   go通过标准库encoding/json,encoding.xml分别json和xml格式的编码和解码提供支持
+	*/
+	type Movie struct {
+		Title  string
+		Year   int  `json:"released"` //称为标签，用来实现成员变量和json字段名称的同步
+		Color  bool `json:"color,omitempty"`
+		Actors []string
+	}
+
+	var movies = []Movie{
+		{Title: "Casablanca", Year: 1942, Color: false,
+			Actors: []string{"Humphrey Bogart", "Ingrid Bergman"}},
+		{Title: "Cool Hand Luke", Year: 1967, Color: true,
+			Actors: []string{"Paul Newman"}},
+		{Title: "Bullitt", Year: 1968, Color: true,
+			Actors: []string{"Steve McQueen", "Jacqueline Bisset"}},
+	}
+	//go的数据结构转换为json称为marshal，通过json.Marshal来实现
+	data1, err := json.Marshal(movies)
+	if err != nil {
+		log.Fatalf("JSON marshaling failed: %s", err)
+	}
+	fmt.Printf("%s\n", data1)
+
+	//json.MarshalIndent用来格式化marshal后的json格式
+	data, err := json.MarshalIndent(movies, "", "    ")
+	if err != nil {
+		log.Fatalf("JSON marshaling failed: %s", err)
+	}
+	fmt.Printf("%s\n", data)
+
+	//将json字符串转换为go的响应数据结构称为unmarshal，通过json.Unmarshal来实现
+	var titles []struct{ Title string }
+	if err := json.Unmarshal(data, &titles); err != nil {
+		log.Fatalf("JSON unmarshaling failed: %s", err)
+	}
+	fmt.Println(titles) // "[{Casablanca} {Cool Hand Luke} {Bullitt}]"
 
 }
 
@@ -209,4 +413,26 @@ func appendInt(x []int, y int) []int {
 	}
 	z[len(x)] = y
 	return z
+}
+
+func dup() {
+	counts := make(map[string]int)
+	input := bufio.NewScanner(os.Stdin)
+	for input.Scan() {
+		counts[input.Text()]++
+	}
+	for line, n := range counts {
+		if n > 1 {
+
+			fmt.Printf("%d\t%s\n", n, line)
+		}
+	}
+}
+
+func EmployeeByID(id int) *Employee {
+	return &Employee{}
+}
+
+func EmployeeByID1(id int) Employee {
+	return Employee{}
 }
