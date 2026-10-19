@@ -26,12 +26,15 @@ func SetupRouter(db *gorm.DB, secret string) *gin.Engine {
 	// 初始化服务
 	authService := service.NewAuthService(db, secret)
 	permissionService := service.NewPermissionService(db)
+	homeService := service.NewHomeService(db)
 
 	// 初始化控制器（用于认证）
 	authHandler := handler.NewAuthHandler(authService)
 
 	// 初始化处理器（用于权限）
 	permissionHandler := handler.NewPermissionHandler(permissionService)
+
+	homeHandler := handler.NewHomeHandler(homeService)
 
 	// API路由组
 	api := r.Group("/api")
@@ -44,6 +47,11 @@ func SetupRouter(db *gorm.DB, secret string) *gin.Engine {
 		protected := api.Group("/")
 		protected.Use(middleware.AuthMiddleware(secret))
 		{
+
+			home := protected.Group("/home")
+			{
+				home.GET("/category/head", homeHandler.HomeCategoryHead)
+			}
 			// 用户相关
 			protected.GET("/profile", func(c *gin.Context) {
 				userID := c.GetUint("userID")

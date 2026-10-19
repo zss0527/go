@@ -36,7 +36,11 @@ func (c *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, resp)
+	ctx.JSON(http.StatusOK, gin.H{
+		"code":    200,
+		"message": "success",
+		"data":    resp,
+	})
 }
 
 func (c *AuthHandler) Register(ctx *gin.Context) {
@@ -46,7 +50,7 @@ func (c *AuthHandler) Register(ctx *gin.Context) {
 		return
 	}
 
-	err := c.authService.Register(req.Username, req.Password,req.Email)
+	err := c.authService.Register(req.Username, req.Password, req.Email)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
