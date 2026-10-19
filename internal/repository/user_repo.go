@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"bunny-fairy-api/internal/models"
+	"bunny-fairy-api/internal/models/rbac"
 
 	"gorm.io/gorm"
 )
@@ -14,8 +14,8 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
-	var user models.User
+func (r *UserRepository) FindByUsername(username string) (*rbac.User, error) {
+	var user rbac.User
 	err := r.db.Where("username = ?", username).First(&user).Error
 	if err != nil {
 		return nil, err
@@ -23,8 +23,8 @@ func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) FindByID(id uint) (*models.User, error) {
-	var user models.User
+func (r *UserRepository) FindByID(id uint) (*rbac.User, error) {
+	var user rbac.User
 	err := r.db.First(&user, id).Error
 	if err != nil {
 		return nil, err
@@ -32,6 +32,6 @@ func (r *UserRepository) FindByID(id uint) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) Update(user *models.User) error {
+func (r *UserRepository) Update(user *rbac.User) error {
 	return r.db.Save(user).Error
 }

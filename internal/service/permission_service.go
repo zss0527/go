@@ -1,7 +1,7 @@
 package service
 
 import (
-	"bunny-fairy-api/internal/models"
+	"bunny-fairy-api/internal/models/rbac"
 
 	"gorm.io/gorm"
 )
@@ -19,8 +19,8 @@ func NewPermissionService(db *gorm.DB) *PermissionService {
 }
 
 // GetAllPermissions 获取数据库里面所有的permission
-func (s *PermissionService) GetAllPermissions() ([]models.Permission, error) {
-	var permissions []models.Permission
+func (s *PermissionService) GetAllPermissions() ([]rbac.Permission, error) {
+	var permissions []rbac.Permission
 
 	err := s.db.Order("id").Find(&permissions).Error
 	if err != nil {
@@ -49,8 +49,8 @@ func (s *PermissionService) GetPermissionsByUserID(userID uint) ([]string, error
 }
 
 // GetUserPermissionsWithDetails 根据用户的id获取permission的详细信息（包含id, name, resource, action）
-func (s *PermissionService) GetUserPermissionsWithDetails(userID uint) ([]models.Permission, error) {
-	var permissions []models.Permission
+func (s *PermissionService) GetUserPermissionsWithDetails(userID uint) ([]rbac.Permission, error) {
+	var permissions []rbac.Permission
 
 	err := s.db.Table("permissions").
 		Select("permissions.*").

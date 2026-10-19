@@ -1,12 +1,12 @@
 package service
 
 import (
+	"bunny-fairy-api/internal/models/rbac"
 	"errors"
 	"time"
 
 	"bunny-fairy-api/internal/auth"
 	"bunny-fairy-api/internal/dto"
-	"bunny-fairy-api/internal/models"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -28,7 +28,7 @@ func NewAuthService(db *gorm.DB, secret string) *AuthService {
 
 func (s *AuthService) Register(username, password, email string) error {
 	// 检查用户名是否已存在
-	var user models.User
+	var user rbac.User
 	err := s.db.Where("username = ?", username).First(&user).Error
 	if err == nil {
 		return errors.New("用户名已存在")
@@ -40,7 +40,7 @@ func (s *AuthService) Register(username, password, email string) error {
 
 	// 创建新用户
 	now := time.Now()
-	newUser := models.User{
+	newUser := rbac.User{
 		Username:      username,
 		Password:      string(hash),
 		Email:         email,
@@ -58,7 +58,7 @@ func (s *AuthService) Register(username, password, email string) error {
 // Login 处理登录逻辑
 func (s *AuthService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 	// 1. 查询用户
-	var user models.User
+	var user rbac.User
 	err := s.db.Where("username = ? AND is_active = true", req.Username).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -127,12 +127,11 @@ func (s *AuthService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 }
 
 // GetUserByID 根据ID获取用户
-func (s *AuthService) GetUserByID(userID uint) (*models.User, error) {
-	var user models.User
+func (s *AuthService) GetUserByID(userID uint) (*rbac.User, error) {
+	var user rbac.User
 	err := s.db.First(&user, userID).Error
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
-

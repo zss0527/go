@@ -2,7 +2,8 @@ package main
 
 import (
 	"bunny-fairy-api/internal/config"
-	"bunny-fairy-api/internal/models"
+	"bunny-fairy-api/internal/models/home"
+	"bunny-fairy-api/internal/models/rbac"
 	"bunny-fairy-api/internal/router"
 	"bunny-fairy-api/pkg/database"
 	"log"
@@ -19,7 +20,16 @@ func main() {
 		log.Fatal("Failed to connect database:", err)
 	}
 
-	if err := db.AutoMigrate(&models.User{}); err != nil {
+	if err := db.AutoMigrate(
+		&rbac.User{},
+		&rbac.Role{},
+		&rbac.Permission{},
+		&rbac.UserRole{},
+		&rbac.RolePermission{},
+		&home.Category{},
+		&home.Goods{},
+		&home.Banner{},
+	); err != nil {
 		log.Fatal("Failed to migrate:", err)
 	}
 	//

@@ -1,7 +1,7 @@
 package service
 
 import (
-	"bunny-fairy-api/internal/models"
+	"bunny-fairy-api/internal/models/rbac"
 	"bunny-fairy-api/internal/repository"
 	"errors"
 	"time"
@@ -15,7 +15,7 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) Authenticate(req models.LoginRequest) (*models.UserResponse, error) {
+func (s *UserService) Authenticate(req rbac.LoginRequest) (*rbac.UserResponse, error) {
 	user, err := s.repo.FindByUsername(req.Username)
 	if err != nil {
 		return nil, errors.New("invalid username or password")
@@ -26,7 +26,7 @@ func (s *UserService) Authenticate(req models.LoginRequest) (*models.UserRespons
 		return nil, errors.New("invalid username or password")
 	}
 
-	return &models.UserResponse{
+	return &rbac.UserResponse{
 		ID:            user.ID,
 		Username:      user.Username,
 		Email:         user.Email,
@@ -37,13 +37,13 @@ func (s *UserService) Authenticate(req models.LoginRequest) (*models.UserRespons
 	}, nil
 }
 
-func (s *UserService) GetByID(id uint) (*models.UserResponse, error) {
+func (s *UserService) GetByID(id uint) (*rbac.UserResponse, error) {
 	user, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, errors.New("user not found")
 	}
 
-	return &models.UserResponse{
+	return &rbac.UserResponse{
 		ID:            user.ID,
 		Username:      user.Username,
 		Email:         user.Email,
@@ -54,7 +54,7 @@ func (s *UserService) GetByID(id uint) (*models.UserResponse, error) {
 	}, nil
 }
 
-func (s *UserService) UpdateLoginTime(id uint, loginTime time.Time) (*models.UserResponse, error) {
+func (s *UserService) UpdateLoginTime(id uint, loginTime time.Time) (*rbac.UserResponse, error) {
 	user, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, errors.New("user not found")
@@ -70,7 +70,7 @@ func (s *UserService) UpdateLoginTime(id uint, loginTime time.Time) (*models.Use
 		return nil, errors.New("user not found")
 	}
 
-	return &models.UserResponse{
+	return &rbac.UserResponse{
 		ID:            user.ID,
 		Username:      user.Username,
 		Email:         user.Email,
@@ -81,7 +81,7 @@ func (s *UserService) UpdateLoginTime(id uint, loginTime time.Time) (*models.Use
 	}, nil
 }
 
-func (s *UserService) Update(id uint, email string) (*models.UserResponse, error) {
+func (s *UserService) Update(id uint, email string) (*rbac.UserResponse, error) {
 	user, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, errors.New("user not found")
@@ -92,7 +92,7 @@ func (s *UserService) Update(id uint, email string) (*models.UserResponse, error
 		return nil, errors.New("failed to update user")
 	}
 
-	return &models.UserResponse{
+	return &rbac.UserResponse{
 		ID:            user.ID,
 		Username:      user.Username,
 		Email:         user.Email,

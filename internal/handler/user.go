@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"bunny-fairy-api/internal/models"
+	"bunny-fairy-api/internal/models/rbac"
 	"bunny-fairy-api/internal/service"
 	"net/http"
 	"strconv"
@@ -28,7 +28,7 @@ func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
 
 // 业务方法（小写开头，不对外暴露）
 func (h *UserHandler) Login(c *gin.Context) {
-	var req models.LoginRequest
+	var req rbac.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

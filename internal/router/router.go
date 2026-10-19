@@ -3,6 +3,7 @@ package router
 import (
 	"bunny-fairy-api/internal/handler"
 	"bunny-fairy-api/internal/middleware"
+	"bunny-fairy-api/internal/repository"
 	"bunny-fairy-api/internal/service"
 	"time"
 
@@ -23,10 +24,16 @@ func SetupRouter(db *gorm.DB, secret string) *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	categoryRepo := repository.NewCategoryRepo(db)
+	bannerRepo := repository.NewBannerRepo(db)
+
 	// 初始化服务
 	authService := service.NewAuthService(db, secret)
 	permissionService := service.NewPermissionService(db)
-	homeService := service.NewHomeService(db)
+
+	categoryService := service.NewCategoryService(categoryRepo)
+	homeService := service.NewHomeService(db, categoryService)
+	bannerService := service.NewBannerService(bannerRepo)
 
 	// 初始化控制器（用于认证）
 	authHandler := handler.NewAuthHandler(authService)
@@ -36,12 +43,18 @@ func SetupRouter(db *gorm.DB, secret string) *gin.Engine {
 
 	homeHandler := handler.NewHomeHandler(homeService)
 
+	categoryHandler := handler.NewCategoryHandler(categoryService)
+
+	bannerHandler := handler.NewBannerHandler(bannerService)
+
 	// API路由组
 	api := r.Group("/api")
 	{
 		// 公开路由
 		api.POST("/login", authHandler.Login)
 		api.POST("/register", authHandler.Register)
+		api.POST("/category/import", categoryHandler.ImportCategoryTree)
+		api.GET("/category/tree", categoryHandler.GetCategoryTree)
 
 		// 需要认证的路由
 		protected := api.Group("/")
@@ -51,7 +64,9 @@ func SetupRouter(db *gorm.DB, secret string) *gin.Engine {
 			home := protected.Group("/home")
 			{
 				home.GET("/category/head", homeHandler.HomeCategoryHead)
+				home.GET("/banner", bannerHandler.FindBannerByType)
 			}
+
 			// 用户相关
 			protected.GET("/profile", func(c *gin.Context) {
 				userID := c.GetUint("userID")
